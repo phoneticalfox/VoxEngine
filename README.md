@@ -132,3 +132,11 @@ See: `docs/project_format.md`.
 ## License
 
 Apache-2.0 (see `LICENSE`).
+
+---
+
+## Repository
+
+- Default branch: `main`
+- Project files live at the repository root (the former `voxengine/` folder was flattened).
+- Open pull requests against `main`; feature branches are preferred for changes.
