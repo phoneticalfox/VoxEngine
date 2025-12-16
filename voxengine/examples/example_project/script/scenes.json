@@ -1,0 +1,14 @@
+{
+  "scenes": [
+    {
+      "id": "scene01",
+      "title": "Placeholder Scene",
+      "lines": [
+        {
+          "character": "NARRATOR",
+          "text": "This is a placeholder scene."
+        }
+      ]
+    }
+  ]
+}

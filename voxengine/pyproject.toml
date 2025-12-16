@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "voxengine"
+version = "0.1.0"
+description = "Offline-first studio backend for local LLM + TTS with cast libraries."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [{name = "VoxEngine Contributors"}]
+
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn>=0.27",
+  "pydantic>=2.6",
+  "pydantic-settings>=2.2",
+  "python-multipart>=0.0.9",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.4", "httpx>=0.27"]
+audio = ["numpy>=1.26", "soundfile>=0.12"]
+llm_llama_cpp = ["llama-cpp-python>=0.2.70"]
+llm_ollama = []
+tts_piper = []
+tts_cosyvoice = []
+
+[tool.ruff]
+line-length = 100

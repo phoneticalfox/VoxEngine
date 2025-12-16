@@ -1,0 +1,1 @@
+Drop actor folders here (each with consent.json + reference.wav).
