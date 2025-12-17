@@ -82,25 +82,37 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-### 3) Run the local server
+### 3) Smoke-test the engine
 
 ```bash
-uvicorn voxengine.api.server:app --reload --host 127.0.0.1 --port 7788
+voxengine doctor
+```
+
+### 4) Run the local server
+
+```bash
+voxengine serve
+# or: uvicorn voxengine.api.server:app --host 127.0.0.1 --port 7341
 ```
 
 Open:
-- http://127.0.0.1:7788/docs
+- http://127.0.0.1:7341/health
+- http://127.0.0.1:7341/doctor
+
+### CLI (universal wrench)
+
+- `voxengine doctor` — print engine metadata and available adapters
+- `voxengine serve` — start the FastAPI service (defaults: 127.0.0.1:7341)
+- `voxengine tts speak --text "hello" --model /path/voice.onnx` — synthesize to `out.wav`
 
 ---
 
 ## API surface (high-level)
 
-- `POST /v1/script/generate_scene`
-- `POST /v1/script/rewrite_line`
-- `POST /v1/cast/register`
-- `POST /v1/tts/speak`
-- `POST /v1/render/scene`
-- `GET  /v1/render/jobs/{job_id}`
+- `GET  /health`
+- `GET  /doctor`
+- `POST /tts/speak`
+- (legacy draft endpoints for script/render remain in code for future work)
 
 The contract is intentionally small so you can swap UIs and engines without breaking everything.
 
