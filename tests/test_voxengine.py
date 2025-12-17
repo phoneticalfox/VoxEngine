@@ -10,6 +10,7 @@ from voxengine.cli import app
 from voxengine.core.engine import Engine, EngineConfig
 from voxengine.core.registry import AdapterRegistry
 from voxengine.core.errors import UserConfigError
+import voxengine.core.engine as engine_mod
 
 
 def test_doctor_cli_json_output():
@@ -75,3 +76,34 @@ def test_out_format_validation(tmp_path: Path):
 
     with pytest.raises(UserConfigError):
         eng.tts_speak(text="hi", backend="beep", out_path=tmp_path / "clip", out_format="mp3")
+
+
+def _reset_engine(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("VOXENGINE_CACHE_DIR", str(tmp_path / "cache"))
+    monkeypatch.setenv("VOXENGINE_MODELS_DIR", str(tmp_path / "models"))
+    engine_mod._engine = None
+
+
+def test_api_speak_rejects_invalid_profile(monkeypatch, tmp_path: Path):
+    _reset_engine(monkeypatch, tmp_path)
+    client = TestClient(create_app())
+
+    resp = client.post("/v1/tts/speak", json={"text": "hello", "backend": "beep", "profile": "bad"})
+    assert resp.status_code == 400
+    assert "Invalid profile" in resp.json()["detail"]
+
+
+def test_api_speak_beep_writes_files(monkeypatch, tmp_path: Path):
+    _reset_engine(monkeypatch, tmp_path)
+    client = TestClient(create_app())
+
+    resp = client.post("/v1/tts/speak", json={"text": "hi", "backend": "beep", "profile": "dialogue"})
+    assert resp.status_code == 200
+    data = resp.json()
+
+    audio_path = Path(data["audio_path"])
+    meta_path = Path(data["meta_path"])
+    assert audio_path.exists()
+    assert meta_path.exists()
+    assert data["profile"] == "dialogue"
+    assert data["download_url"].endswith(audio_path.name)
