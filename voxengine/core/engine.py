@@ -21,6 +21,9 @@ from voxengine.core.errors import MissingDependencyError, UserConfigError
 
 log = get_logger("voxengine.engine")
 
+ALLOWED_PROFILES = {"screenreader", "narration", "dialogue"}
+ALLOWED_OUTPUT_FORMATS = {"wav"}
+
 
 @dataclass(frozen=True)
 class EngineConfig:
@@ -117,11 +120,17 @@ class Engine:
         if not decision.allowed:
             raise UserConfigError(f"Blocked by policy: {decision.reason}")
 
+        normalized_profile = self._normalize_profile(profile)
+        normalized_format = out_format.lower()
+        if normalized_format not in ALLOWED_OUTPUT_FORMATS:
+            allowed = ", ".join(sorted(ALLOWED_OUTPUT_FORMATS))
+            raise UserConfigError(f"Unsupported audio format '{out_format}'. Supported: {allowed}.")
+
         adapter = self.registry.get_tts(backend)
         if out_path is None:
-            out_path = self.cfg.cache_dir / f"tts_{uuid.uuid4().hex}.{out_format}"
+            out_path = self.cfg.cache_dir / f"tts_{uuid.uuid4().hex}.{normalized_format}"
         else:
-            out_path = out_path.with_suffix(f".{out_format}")
+            out_path = out_path.with_suffix(f".{normalized_format}")
 
         resolved_model = model_path
         if backend == "piper" and model_path is None:
@@ -132,8 +141,8 @@ class Engine:
             out_path=out_path,
             model_path=resolved_model,
             voice=voice,
-            profile=profile,
-            out_format=out_format,
+            profile=normalized_profile,
+            out_format=normalized_format,
         )
 
         meta_path = out_path.with_suffix(".json")
@@ -141,7 +150,7 @@ class Engine:
             text=text,
             backend=backend,
             voice=voice,
-            profile=profile,
+            profile=normalized_profile,
             audio_path=out_path,
             meta_path=meta_path,
             render=result,
@@ -151,7 +160,7 @@ class Engine:
         return {
             "backend": backend,
             "voice_id": voice,
-            "profile": profile,
+            "profile": normalized_profile,
             "audio_path": str(out_path),
             "meta_path": str(meta_path),
             "sample_rate": result.sample_rate,
@@ -198,6 +207,15 @@ class Engine:
             "sample_rate": render.sample_rate,
             "warnings": render.warnings,
         }
+
+    def _normalize_profile(self, profile: Optional[str]) -> Optional[str]:
+        if profile is None:
+            return None
+        normalized = profile.lower()
+        if normalized not in ALLOWED_PROFILES:
+            allowed = ", ".join(sorted(ALLOWED_PROFILES))
+            raise UserConfigError(f"Invalid profile '{profile}'. Choose from: {allowed}.")
+        return normalized
 
 
 _engine: Optional[Engine] = None
