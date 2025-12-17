@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional
 
 from voxengine.adapters.tts.base import TTSAudio
-from voxengine.core.errors import MissingDependencyError, UserConfigError
+from voxengine.core.errors import MissingDependencyError, UserConfigError, VoxEngineError
 
 
 class PiperTTSAdapter:
@@ -52,5 +52,10 @@ class PiperTTSAdapter:
             cmd, input=text.encode("utf-8"), stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         if proc.returncode != 0:
-            raise RuntimeError(f"Piper failed: {proc.stderr.decode('utf-8', errors='ignore')}")
+            stderr = proc.stderr.decode("utf-8", errors="ignore").strip()
+            stdout = proc.stdout.decode("utf-8", errors="ignore").strip()
+            detail = stderr or stdout or "unknown error"
+            raise VoxEngineError(
+                f"Piper failed to synthesize audio. Details: {detail}", exit_code=2
+            )
         return TTSAudio(path=out_path, sample_rate=22050)
