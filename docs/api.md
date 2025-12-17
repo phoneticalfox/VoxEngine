@@ -1,14 +1,22 @@
-# VoxEngine API (Draft)
+# VoxEngine API (MVP)
 
-The API is intentionally small and stable so UIs can swap in/out.
+## GET /health
+Simple status check. Returns version + ok flag.
 
-## Endpoints
+## GET /doctor
+Returns engine metadata and adapter availability.
 
-- `POST /v1/script/generate_scene`
-- `POST /v1/script/rewrite_line`
-- `POST /v1/cast/register`
-- `POST /v1/tts/speak`
-- `POST /v1/render/scene`
-- `GET  /v1/render/jobs/{job_id}`
-
-See `voxengine/api/schemas.py` for request/response shapes.
+## POST /tts/speak
+Request:
+```json
+{ "text": "hello", "backend": "piper", "model_path": "/path/model.onnx" }
+```
+Response:
+```json
+{
+  "backend": "piper",
+  "path": "/tmp/tts_x.wav",
+  "sample_rate": 22050,
+  "download_url": "/tts/file?path=/tmp/tts_x.wav"
+}
+```
