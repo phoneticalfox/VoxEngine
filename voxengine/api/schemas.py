@@ -45,12 +45,19 @@ class SpeakRequest(BaseModel):
     backend: str = "piper"
     model_path: Optional[Path] = None
     voice: Optional[str] = None
+    profile: Optional[str] = None
+    out_format: str = "wav"
 
 
 class SpeakResponse(BaseModel):
     backend: str
-    path: str
+    audio_path: str
+    meta_path: str
+    voice_id: Optional[str] = None
+    profile: Optional[str] = None
+    duration_s: Optional[float] = None
     sample_rate: int
+    warnings: List[str] = Field(default_factory=list)
     download_url: Optional[str] = None
 
 

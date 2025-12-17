@@ -4,7 +4,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Protocol
 
+from voxengine.adapters.tts.beep import BeepTTSAdapter
 from voxengine.adapters.tts.piper import PiperTTSAdapter
+from voxengine.core.errors import MissingDependencyError
 
 
 class LLMAdapter(Protocol):
@@ -18,7 +20,8 @@ class TTSAdapter(Protocol):
     """Protocol for TTS adapters."""
 
     def about(self) -> dict: ...
-    def speak(self, text: str, out_path, model_path=None, voice=None): ...
+    def speak(self, text: str, out_path, model_path=None, voice=None, profile=None, out_format="wav"):
+        ...
 
 
 @dataclass
@@ -30,14 +33,16 @@ class AdapterRegistry:
 
     @staticmethod
     def default() -> "AdapterRegistry":
-        return AdapterRegistry(tts={"piper": PiperTTSAdapter()})
+        return AdapterRegistry(tts={"beep": BeepTTSAdapter(), "piper": PiperTTSAdapter()})
 
     def list_tts(self) -> List[dict]:
         return [self.tts[k].about() for k in sorted(self.tts.keys())]
 
     def get_tts(self, name: str) -> TTSAdapter:
         if name not in self.tts:
-            raise KeyError(f"Unknown TTS backend '{name}'. Available: {sorted(self.tts.keys())}")
+            raise MissingDependencyError(
+                f"Unknown TTS backend '{name}'. Available: {', '.join(sorted(self.tts.keys()))}"
+            )
         return self.tts[name]
 
 
