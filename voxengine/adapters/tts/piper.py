@@ -3,15 +3,11 @@
 from __future__ import annotations
 import shutil
 import subprocess
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-
-@dataclass(frozen=True)
-class TTSAudio:
-    path: Path
-    sample_rate: int
+from voxengine.adapters.tts.base import TTSAudio
+from voxengine.core.errors import MissingDependencyError, UserConfigError
 
 
 class PiperTTSAdapter:
@@ -24,6 +20,7 @@ class PiperTTSAdapter:
             "offline": True,
             "needs_executable": True,
             "executable_found": shutil.which("piper") is not None,
+            "available": shutil.which("piper") is not None,
             "notes": "Requires 'piper' on PATH plus an .onnx model file.",
         }
 
@@ -33,12 +30,18 @@ class PiperTTSAdapter:
         out_path: Path,
         model_path: Optional[Path] = None,
         voice: Optional[str] = None,
+        profile: Optional[str] = None,
+        out_format: str = "wav",
     ) -> TTSAudio:
         exe = shutil.which("piper")
         if not exe:
-            raise RuntimeError("Piper backend selected but 'piper' was not found on PATH.")
+            raise MissingDependencyError("Piper backend selected but 'piper' was not found on PATH.")
         if model_path is None:
-            raise ValueError("Piper requires --model pointing to an .onnx voice model.")
+            raise UserConfigError("Piper requires --model pointing to an .onnx voice model.")
+        if not model_path.exists():
+            raise UserConfigError(f"Model path does not exist: {model_path}")
+        if out_format != "wav":
+            raise UserConfigError("Piper currently only supports wav output.")
 
         out_path.parent.mkdir(parents=True, exist_ok=True)
         cmd = [exe, "--model", str(model_path), "--output_file", str(out_path)]

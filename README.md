@@ -101,9 +101,19 @@ Open:
 
 ### CLI (universal wrench)
 
-- `voxengine doctor` — print engine metadata and available adapters
+- `voxengine doctor` — print engine metadata and available adapters (use `--json` for machine output)
 - `voxengine serve` — start the FastAPI service (defaults: 127.0.0.1:7341)
-- `voxengine tts speak --text "hello" --model /path/voice.onnx` — synthesize to `out.wav`
+- `voxengine tts speak "hello" --model /path/voice.onnx` — synthesize to `out.wav`
+- `voxengine tts speak "test" --backend beep` — write a built-in validation tone + metadata
+
+### First run expectations
+
+- `voxengine doctor` prints a short summary plus next steps. The built-in `beep` backend should
+  always show as available; `piper` will be unavailable until you install its executable and add a
+  model.
+- `voxengine serve` starts FastAPI. `GET /health` returns `{ "status": "ok" }`.
+- `voxengine tts speak "hello" --backend beep` writes two files: `out.wav` and a matching
+  `out.json` sidecar containing render metadata.
 
 ---
 
@@ -111,7 +121,9 @@ Open:
 
 - `GET  /health`
 - `GET  /doctor`
+- `GET  /v1/backends`
 - `POST /tts/speak`
+- `POST /v1/tts/speak`
 - (legacy draft endpoints for script/render remain in code for future work)
 
 The contract is intentionally small so you can swap UIs and engines without breaking everything.
